@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const app = express();
 const PORT = 5000;
 const path=require("path");
-const LOCAL_IP="192.168.31.136";
 
 const cors = require('cors');
 app.use(cors());
@@ -69,6 +68,6 @@ app.use("/api",userRoutes);
 
 // Start the server
 
-app.listen(PORT,LOCAL_IP, () => {
-  console.log(`Server running at http://${LOCAL_IP}:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
 });
