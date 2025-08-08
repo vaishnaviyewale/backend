@@ -57,4 +57,27 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Get User ID by Email Route
+router.get("/user-id", async (req, res) => {
+  const { email } = req.query;
+
+  if (!email) {
+    return res.status(400).json({ msg: "Email is required." });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found." });
+    }
+
+    res.status(200).json({ userId: user._id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error." });
+  }
+});
+
+
 module.exports = router;
