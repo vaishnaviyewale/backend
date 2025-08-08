@@ -1,83 +1,53 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const User = require("../models/User"); // import user
+const User = require("../models/User");
 const router = express.Router();
 
-// Register Route
-
+// Register
 router.post("/register", async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ msg: "Email and password are required." });
-  }
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ msg: "All fields required." });
 
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ msg: "User already exists." });
-    }
+    if (await User.findOne({ email })) return res.status(400).json({ msg: "User exists." });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, password: hashedPassword });
-    await newUser.save();
-
-    res.status(201).json({ msg: "User registered successfully." });
-  } 
-  catch (err) {
-    console.error(err);
+    await new User({ name, email, password: hashedPassword }).save();
+    res.status(201).json({ msg: "Registered." });
+  } catch (err) {
     res.status(500).json({ msg: "Server error." });
   }
 });
 
-// Login Route
-
+// Login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ msg: "Email and password are required." });
-  }
+  if (!email || !password) return res.status(400).json({ msg: "All fields required." });
 
   try {
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ msg: "User not found." });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    if (!user || !(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ msg: "Invalid credentials." });
-    }
 
-    res.status(200).json({ msg: "Login successful." });
+    res.status(200).json({ msg: "Login successful", user: { id: user._id, name: user.name } });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ msg: "Server error." });
   }
 });
 
-// Get User ID by Email Route
+// Get User ID
 router.get("/user-id", async (req, res) => {
   const { email } = req.query;
-
-  if (!email) {
-    return res.status(400).json({ msg: "Email is required." });
-  }
+  if (!email) return res.status(400).json({ msg: "Email required." });
 
   try {
     const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ msg: "User not found." });
-    }
-
-    res.status(200).json({ userId: user._id });
+    if (!user) return res.status(404).json({ msg: "User not found." });
+    res.json({ userId: user._id, name: user.name });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ msg: "Server error." });
   }
 });
 
-
 module.exports = router;
+
