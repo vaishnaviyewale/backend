@@ -6,14 +6,16 @@ const router = express.Router();
 // Register
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ msg: "All fields required." });
+  if (!name || !email || !password) 
+    return res.status(400).json({ msg: "All fields required." });
 
   try {
-    if (await User.findOne({ email })) return res.status(400).json({ msg: "User exists." });
+    if (await User.findOne({ email })) 
+      return res.status(400).json({ msg: "User already exists." });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     await new User({ name, email, password: hashedPassword }).save();
-    res.status(201).json({ msg: "Registered." });
+    res.status(201).json({ msg: "Registered successfully." });
   } catch (err) {
     res.status(500).json({ msg: "Server error." });
   }
@@ -22,32 +24,25 @@ router.post("/register", async (req, res) => {
 // Login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ msg: "All fields required." });
+  if (!email || !password) 
+    return res.status(400).json({ msg: "All fields required." });
 
   try {
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ msg: "Invalid credentials." });
 
-    res.status(200).json({ msg: "Login successful", user: { id: user._id, name: user.name } });
+    res.status(200).json({
+      msg: "Login successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
   } catch (err) {
     res.status(500).json({ msg: "Server error." });
   }
 });
 
-// Get User ID
-router.get("/user-id", async (req, res) => {
-  const { email } = req.query;
-  if (!email) return res.status(400).json({ msg: "Email required." });
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ msg: "User not found." });
-    res.json({ userId: user._id, name: user.name });
-  } catch (err) {
-    res.status(500).json({ msg: "Server error." });
-  }
-});
-
-module.exports = router;
 
