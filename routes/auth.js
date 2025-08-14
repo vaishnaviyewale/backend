@@ -25,8 +25,6 @@ router.post("/register", async (req, res) => {
     res.status(500).json({ msg: "Server error." });
   }
 });
-
-
 // Login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -34,14 +32,23 @@ router.post("/login", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password)))
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ msg: "Invalid credentials." });
+    }
 
-    res.status(200).json({ msg: "Login successful", user: { id: user._id, name: user.name } });
+    res.status(200).json({
+      msg: "Login successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
   } catch (err) {
     res.status(500).json({ msg: "Server error." });
   }
 });
+
 
 // Get User ID
 router.get("/user-id", async (req, res) => {
